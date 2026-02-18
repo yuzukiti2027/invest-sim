@@ -16,7 +16,10 @@ type Props = {
   currentPrice: number;
   setTrades: Dispatch<SetStateAction<Trade[]>>;
   money: number;
+  userId: number;
 };
+
+const API_BASE_URL = 'http://localhost:3001';
 
 export default function Modal({
   isOpenOrderModal,
@@ -24,12 +27,65 @@ export default function Modal({
   currentPrice,
   setTrades,
   money,
+  userId,
 }: Props) {
   if (!isOpenOrderModal) return null;
 
   const handleClose = () => setIsOpenOrderModal(false);
   const [purchaseMoneyInput, setPurchaseMoneyInput] = useState<number | ''>(''); // ★ input 用s
   const [error, setError] = useState<string | null>(null); // ★ エラーメッセージ用
+
+  const handlePurchase = async () => {
+    if (typeof purchaseMoneyInput === 'number') {
+      if (purchaseMoneyInput > money) {
+        setError('残高を超える金額は指定できません。');
+        return; // ここで処理中断
+      }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/users/${userId}/trades`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            trade: {
+              purchase_price: currentPrice,
+              purchase_money: purchaseMoneyInput,
+              purchase_amount: purchaseMoneyInput / currentPrice,
+              profit: 0,
+              timestamp: new Date().toISOString(),
+            },
+          }),
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Failed to create trade');
+        }
+
+        const savedTrade = await res.json();
+
+        const newTrade: Trade = {
+          id: savedTrade.id,
+          purchasePrice: currentPrice,
+          purchaseMoney: purchaseMoneyInput,
+          purchaseAmount: purchaseMoneyInput / currentPrice,
+          profit: 0,
+          timestamp: new Date(savedTrade.timestamp).getTime(),
+        };
+
+        setTrades((prev) => [...prev, newTrade]);
+        setPurchaseMoneyInput('');
+        handleClose();
+      } catch (error) {
+        console.error('取引の作成に失敗しました', error);
+        setError(
+          error instanceof Error ? error.message : '取引の作成に失敗しました'
+        );
+      }
+    }
+  };
 
   return (
     <div
@@ -71,28 +127,7 @@ export default function Modal({
           <button
             type="button"
             className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
-            onClick={() => {
-              if (typeof purchaseMoneyInput === 'number') {
-                if (purchaseMoneyInput > money) {
-                  setError('残高を超える金額は指定できません。');
-                  return; // ここで処理中断
-                }
-
-                setTrades((prev) => [
-                  ...prev,
-                  {
-                    id: prev.length + 1,
-                    purchasePrice: currentPrice,
-                    purchaseMoney: purchaseMoneyInput,
-                    purchaseAmount: purchaseMoneyInput / currentPrice,
-                    profit: 0,
-                    timestamp: Date.now(),
-                  },
-                ]);
-              }
-              setPurchaseMoneyInput('');
-              handleClose();
-            }}
+            onClick={handlePurchase}
           >
             購入する（ダミー）
           </button>
