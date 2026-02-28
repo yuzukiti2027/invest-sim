@@ -19,7 +19,8 @@ type Props = {
   userId: number;
 };
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
 
 export default function Modal({
   isOpenOrderModal,
@@ -81,7 +82,7 @@ export default function Modal({
       } catch (error) {
         console.error('取引の作成に失敗しました', error);
         setError(
-          error instanceof Error ? error.message : '取引の作成に失敗しました'
+          error instanceof Error ? error.message : '取引の作成に失敗しました',
         );
       }
     }
@@ -116,7 +117,7 @@ export default function Modal({
             onChange={(e) => {
               setError(null);
               setPurchaseMoneyInput(
-                e.target.value === '' ? '' : Number(e.target.value)
+                e.target.value === '' ? '' : Number(e.target.value),
               );
             }}
           />
