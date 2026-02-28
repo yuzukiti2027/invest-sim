@@ -21,7 +21,8 @@ interface trade {
   timestamp: number;
 }
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
 
 const convertTrade = (res: TradeResponse): trade => ({
   id: res.id,
@@ -148,7 +149,7 @@ export default function Home() {
           throw new Error(
             typeof errorText === 'string'
               ? errorText
-              : errorText.error || `HTTP ${res.status}`
+              : errorText.error || `HTTP ${res.status}`,
           );
         }
 
@@ -156,7 +157,7 @@ export default function Home() {
           const html = await res.text();
           console.error(
             'JSONではなくHTMLが返されました。',
-            html.substring(0, 200)
+            html.substring(0, 200),
           );
           throw new Error('JSONではなくHTMLが返されました');
         }
@@ -243,7 +244,7 @@ export default function Home() {
   };
   const totalProfit = trades.reduce(
     (sum, t) => sum + calcProfit(t, currentPrice),
-    0
+    0,
   );
 
   const handleConfirm = async (t: trade) => {
@@ -260,7 +261,7 @@ export default function Home() {
           headers: {
             Accept: 'application/json',
           },
-        }
+        },
       );
       const contentType = res.headers.get('content-type') ?? '';
 
@@ -271,7 +272,7 @@ export default function Home() {
         throw new Error(
           typeof errorText === 'string'
             ? errorText
-            : errorText.error || `HTTP ${res.status}`
+            : errorText.error || `HTTP ${res.status}`,
         );
       }
       setMoney((prev) => prev + calcProfit(t, currentPrice));
@@ -281,7 +282,7 @@ export default function Home() {
       alert(
         error instanceof Error
           ? `取引の削除に失敗しました': ${error.message}`
-          : '取引の削除に失敗しました'
+          : '取引の削除に失敗しました',
       );
     }
   };
@@ -396,8 +397,8 @@ export default function Home() {
                     calcProfit(t, currentPrice) > 0
                       ? 'text-emerald-600'
                       : calcProfit(t, currentPrice) < 0
-                      ? 'text-rose-600'
-                      : 'text-gray-500'
+                        ? 'text-rose-600'
+                        : 'text-gray-500'
                   }`}
                 >
                   {calcProfit(t, currentPrice) > 0 ? '+' : ''}
@@ -427,8 +428,8 @@ export default function Home() {
                   totalProfit > 0
                     ? 'text-emerald-600'
                     : totalProfit < 0
-                    ? 'text-rose-600'
-                    : 'text-gray-500'
+                      ? 'text-rose-600'
+                      : 'text-gray-500'
                 }`}
               >
                 {totalProfit > 0 ? '+' : ''}
